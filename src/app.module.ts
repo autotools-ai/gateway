@@ -2,14 +2,16 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule } from './config/config.module';
-import { ConfigService } from './config/config.service';
-import { AuthController } from './controllers/auth.controller';
 import { TransactionController } from './controllers/transaction.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { ACLModule } from './auth/acl.module';
 
 @Module({
   imports: [
-    ConfigModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    ACLModule,
     ClientsModule.registerAsync([
       {
         name: 'MAIL_SERVICE',
@@ -17,8 +19,8 @@ import { TransactionController } from './controllers/transaction.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('mailer_queue')}`,
+            urls: [`${configService.get('RABBITMQ_URL')}`],
+            queue: `${configService.get('RABBITMQ_MAILER_QUEUE')}`,
             queueOptions: {
               durable: false,
             },
@@ -34,8 +36,8 @@ import { TransactionController } from './controllers/transaction.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('files_queue')}`,
+            urls: [`${configService.get('RABBITMQ_URL')}`],
+            queue: `${configService.get('RABBITMQ_FILES_QUEUE')}`,
             queueOptions: {
               durable: false,
             },
@@ -51,25 +53,8 @@ import { TransactionController } from './controllers/transaction.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('notification_queue')}`,
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-    ClientsModule.registerAsync([
-      {
-        name: 'AUTH_SERVICE',
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('auth_queue')}`,
+            urls: [`${configService.get('RABBITMQ_URL')}`],
+            queue: `${configService.get('RABBITMQ_NOTIFICATION_QUEUE')}`,
             queueOptions: {
               durable: false,
             },
@@ -86,8 +71,8 @@ import { TransactionController } from './controllers/transaction.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('post_queue')}`,
+            urls: [`${configService.get('RABBITMQ_URL')}`],
+            queue: `${configService.get('RABBITMQ_POST_QUEUE')}`,
             queueOptions: {
               durable: false,
             },
@@ -104,8 +89,8 @@ import { TransactionController } from './controllers/transaction.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('translate_queue')}`,
+            urls: [`${configService.get('RABBITMQ_URL')}`],
+            queue: `${configService.get('RABBITMQ_TRANSLATE_QUEUE')}`,
             queueOptions: {
               durable: false,
             },
@@ -115,7 +100,8 @@ import { TransactionController } from './controllers/transaction.controller';
       },
     ]),
   ],
-  controllers: [AppController, AuthController, TransactionController],
+  controllers: [AppController, TransactionController],
   providers: [AppService],
+  exports: [AppService],
 })
 export class AppModule {}
