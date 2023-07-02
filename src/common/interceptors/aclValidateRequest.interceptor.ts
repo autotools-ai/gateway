@@ -17,7 +17,6 @@ export class AclValidateRequestInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
   ) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    console.log('AclValidateRequestInterceptor');
     const [permissionsRoles]: any = this.reflector.getAllAndMerge<string[]>(
       'roles',
       [context.getHandler(), context.getClass()],
