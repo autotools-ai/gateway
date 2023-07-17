@@ -75,11 +75,11 @@ export class AuthController {
   }
 
   @Public()
-  @Post('/otp')
+  @Post('send-otp')
   @HttpCode(201)
   @ApiOperation({ summary: 'Get OTP', description: 'Get OTP Email ' })
-  public async getOtp(@Body() data: GetOtpDto) {
-    return this.authService.getOtp(data);
+  public async sendOtp(@Body() data: GetOtpDto) {
+    return this.authService.sendOtp(data);
   }
 }
 

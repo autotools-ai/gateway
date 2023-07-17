@@ -80,10 +80,33 @@ export class AuthService {
     }
   }
 
-  public async getOtp(data: GetOtpDto) {
+  public async sendOtp(data: GetOtpDto) {
     try {
       const { email } = data;
-      await firstValueFrom(this.authClient.send('getOtp', { email }));
+      console.log('sendOtp', email);
+      await firstValueFrom(this.authClient.send('sendOTP', { email }));
+    } catch (error) {
+      throw new HttpException(error, 400);
+    }
+  }
+
+  public async validateToken(token: string) {
+    try {
+      const response = await firstValueFrom(
+        this.authClient.send('validate_token', { token }),
+      );
+      return response;
+    } catch (error) {
+      throw new HttpException(error, 400);
+    }
+  }
+
+  public async findUserById(id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.authClient.send('get_user_by_id', { id }),
+      );
+      return response;
     } catch (error) {
       throw new HttpException(error, 400);
     }

@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { IAuthStrategy } from '../IAuthStrategy';
 import { AuthService } from '../auth.service';
+import e from 'express';
 
 export class JwtStrategyBase
   extends PassportStrategy(Strategy)
@@ -18,15 +19,25 @@ export class JwtStrategyBase
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey,
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: any): Promise<any> {
-    const { phone } = payload;
-    // const user: any = await this.userService.findOneByPhone(phone);
-    // if (!user) {
-    //   throw new UnauthorizedException();
-    // }
-    return { ...payload, roles: 'User' as string };
+  async validate(req: e.Request, payload: any): Promise<any> {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const isValidateToken = await this.authService.validateToken(token);
+      if (!isValidateToken) {
+        throw new UnauthorizedException();
+      }
+      const { id } = payload;
+      const user: any = await this.authService.findUserById(id);
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+      return { ...user, roles: payload.roles as string };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
