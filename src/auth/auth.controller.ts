@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   Post,
@@ -17,25 +18,35 @@ import { Public } from 'src/common/decorators';
 
 import { CreateUserDto } from './dtos/signup.dto';
 import { LoginDto } from './dtos/login.dto';
-import { DefaultAuthGuard } from './guards/defaultAuth.guard';
 import { GetOtpDto, RefreshTokenDto, VerifyDto } from './dtos/verify.dto';
 import { AuthService } from './auth.service';
+import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { CaslAbilityFactory, PermissionAction } from 'src/auth/ability.factory';
+import { CheckPermissions } from 'src/common/decorators/abilities.decorator';
+import { DefaultAuthGuard } from './guards/defaultAuth.guard';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private abilityFactory: CaslAbilityFactory,
+  ) {}
 
   @Get('me')
-  @UseInterceptors(AclValidateRequestInterceptor)
-  @UseGuards(DefaultAuthGuard, nestAccessControl.ACGuard)
-  @nestAccessControl.UseRoles({
-    resource: 'user',
-    action: 'read',
-    possession: 'any',
-  })
   @ApiBearerAuth()
-  me(@Req() req) {
+  @UseGuards(DefaultAuthGuard, PermissionsGuard)
+  // @CheckPermissions([PermissionAction.READ, 'User']) // "Invoice" is the value in name column of objects table
+  async me(@Req() req) {
+    const ability = await this.abilityFactory.createForUser(req.user);
+    const condition: any = {};
+    console.log('aaaaaaaaaaaaaaaaa', req.user);
+    condition.id = req.user.id;
+    console.log('condition', condition);
+    if (ability.can(PermissionAction.READ, condition)) {
+      throw new ForbiddenException('You dont have access to this resource!');
+    }
+    console.log('req.user', req.user);
     return this.authService.me(req.user.email);
   }
 

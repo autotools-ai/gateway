@@ -1,13 +1,17 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { jwtSecretFactory } from './jwt/jwtSecretFactory';
-import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from './jwt/jwt.strategy';
 
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { CaslAbilityFactory } from 'src/auth/ability.factory';
+import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { JwtStrategy } from './jwt/jwt.strategy';
+import { jwtSecretFactory } from './jwt/jwtSecretFactory';
+
+@Global()
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -51,7 +55,13 @@ import { JwtStrategy } from './jwt/jwt.strategy';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, jwtSecretFactory],
+  providers: [
+    AuthService,
+    CaslAbilityFactory,
+    PermissionsGuard,
+    JwtStrategy,
+    jwtSecretFactory,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

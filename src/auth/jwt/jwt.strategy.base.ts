@@ -26,12 +26,18 @@ export class JwtStrategyBase
   async validate(req: e.Request, payload: any): Promise<any> {
     try {
       const token = req.headers.authorization.split(' ')[1];
+      console.log('token', token);
       const isValidateToken = await this.authService.validateToken(token);
+      console.log('isValidateToken', isValidateToken);
       if (!isValidateToken) {
         throw new UnauthorizedException();
       }
-      const { id } = payload;
-      const user: any = await this.authService.findUserById(id);
+      console.log('payload', payload);
+      const { userId } = payload;
+      console.log('userId', userId);
+
+      const user: any = await this.authService.findUserById(userId);
+      console.log('user', user);
       if (!user) {
         throw new UnauthorizedException();
       }

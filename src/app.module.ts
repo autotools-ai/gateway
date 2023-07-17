@@ -5,13 +5,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TransactionController } from './controllers/transaction.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { ACLModule } from './auth/acl.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
-    ACLModule,
+    // ACLModule,
     ClientsModule.registerAsync([
       {
         name: 'MAIL_SERVICE',
