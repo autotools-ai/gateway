@@ -1,36 +1,41 @@
-import { Ability } from '@casl/ability';
+import { Ability, MongoAbility } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 export enum PermissionAction {
+  MANAGE = 'manage',
   CREATE = 'create',
   READ = 'read',
   UPDATE = 'update',
   DELETE = 'delete',
 }
-export type PermissionObjectType = any;
+export type PermissionObjectType = any | 'all';
 export type PermissionconditionsType = any;
 
-export type AppAbility = Ability<[PermissionAction, PermissionObjectType]>;
+export type AppAbility = MongoAbility<[PermissionAction, PermissionObjectType]>;
 
 interface CaslPermission {
   action: PermissionAction;
   subject: string;
   condition?: PermissionCondition;
 }
-export interface PermissionCondition {}
+export interface PermissionCondition {
+  [key: string]: any;
+}
 
 @Injectable()
 export class CaslAbilityFactory {
   constructor(private authService: AuthService) {}
-  async createForUser(user): Promise<AppAbility> {
+  async createForUser(user: Record<string, any>): Promise<AppAbility> {
     console.log('role', user);
     const dbPermissions = await this.authService.permissions(user.roles);
     console.log('dbPermissions', dbPermissions);
-    const caslPermissions: CaslPermission[] = dbPermissions.map((p) => ({
-      action: p.action,
-      subject: p.subject,
-      conditions: this.parseCondition(p.conditions, user),
-    }));
+    const caslPermissions: CaslPermission[] = dbPermissions.map(
+      (p: { action: any; subject: any; conditions: PermissionCondition }) => ({
+        action: p.action,
+        subject: p.subject,
+        conditions: this.parseCondition(p.conditions, user),
+      }),
+    );
     console.log('caslPermissions', caslPermissions);
     return new Ability<[PermissionAction, PermissionObjectType]>(
       caslPermissions,

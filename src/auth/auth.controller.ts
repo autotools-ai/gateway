@@ -7,13 +7,9 @@ import {
   Post,
   Req,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import * as nestAccessControl from 'nest-access-control';
-
-import { AclValidateRequestInterceptor } from 'src/common/interceptors/aclValidateRequest.interceptor';
 import { Public } from 'src/common/decorators';
 
 import { CreateUserDto } from './dtos/signup.dto';
@@ -24,6 +20,7 @@ import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { CaslAbilityFactory, PermissionAction } from 'src/auth/ability.factory';
 import { CheckPermissions } from 'src/common/decorators/abilities.decorator';
 import { DefaultAuthGuard } from './guards/defaultAuth.guard';
+import { ForbiddenError } from '@casl/ability';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -36,18 +33,21 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(DefaultAuthGuard, PermissionsGuard)
-  // @CheckPermissions([PermissionAction.READ, 'User']) // "Invoice" is the value in name column of objects table
+  @CheckPermissions([PermissionAction.READ, 'User'])
   async me(@Req() req) {
     const ability = await this.abilityFactory.createForUser(req.user);
-    const condition: any = {};
-    console.log('aaaaaaaaaaaaaaaaa', req.user);
-    condition.id = req.user.id;
-    console.log('condition', condition);
-    if (ability.can(PermissionAction.READ, condition)) {
-      throw new ForbiddenException('You dont have access to this resource!');
+
+    // if (!ability.can(PermissionAction.READ, 'User')) {
+    //   throw new ForbiddenException('You dont have access to this resource!');
+    // }
+    try {
+      const user = this.authService.me(req.user.email);
+      return user;
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw new ForbiddenException(error.message);
+      }
     }
-    console.log('req.user', req.user);
-    return this.authService.me(req.user.email);
   }
 
   @Public()
