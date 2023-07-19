@@ -20,7 +20,8 @@ import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { CaslAbilityFactory, PermissionAction } from 'src/auth/ability.factory';
 import { CheckPermissions } from 'src/common/decorators/abilities.decorator';
 import { DefaultAuthGuard } from './guards/defaultAuth.guard';
-import { ForbiddenError } from '@casl/ability';
+import { ForbiddenError, defineAbility } from '@casl/ability';
+import { LoginMetadata } from 'src/common/interfaces/metadata.interface';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -36,12 +37,30 @@ export class AuthController {
   @CheckPermissions([PermissionAction.READ, 'User'])
   async me(@Req() req) {
     const ability = await this.abilityFactory.createForUser(req.user);
+    // const ability = defineAbility((can) => {
+    //   can('read', 'Story', { created_by: 1 });
+    // });
+    // const address = { country: { isoCode: 'UA', name: 'Ukraine', id: 1 } };
+    // const story = {
+    //   id: 1,
+    //   name: 'My Story',
+    //   created_by: req.user.id,
+    // };
+    const story = new Story();
+    story.created_by = req.user.id;
+    // const address = new Address('UA', 'Ukraine', 1);
+    // console.log('address', address);
+    // console.log('ability', ability);
+    console.log(ability.can(PermissionAction.READ, story)); // true
+
+    // console.log(ability.can('read', address)); // true
 
     // if (!ability.can(PermissionAction.READ, 'User')) {
     //   throw new ForbiddenException('You dont have access to this resource!');
     // }
+    console.log('req.user', req.user);
     try {
-      const user = this.authService.me(req.user.email);
+      const user = this.authService.me(req.user.id);
       return user;
     } catch (error) {
       if (error instanceof ForbiddenException) {
@@ -94,7 +113,20 @@ export class AuthController {
   }
 }
 
-export interface LoginMetadata {
-  ipAddress: string;
-  fingerprint: object;
+export class Address {
+  country;
+  constructor(isoCode, name, id) {
+    this.country = {
+      isoCode: isoCode,
+      name: name,
+      id: id,
+    };
+  }
+}
+
+export class Story {
+  created_by;
+  constructor(created_by?) {
+    this.created_by = created_by;
+  }
 }
