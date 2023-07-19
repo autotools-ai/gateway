@@ -13,9 +13,9 @@ export class AuthService {
       console.error('Failed to connect to authClient:', error);
     });
   }
-  public async me(email: string) {
+  public async me(id: string) {
     try {
-      return firstValueFrom(this.authClient.send('me', email));
+      return firstValueFrom(this.authClient.send('me', id));
     } catch (error) {}
   }
 

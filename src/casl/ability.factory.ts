@@ -26,22 +26,12 @@ export interface PermissionCondition {
 export class CaslAbilityFactory {
   constructor(private authService: AuthService) {}
   async createForUser(user: Record<string, any>): Promise<AppAbility> {
-    console.log('role', user);
     const dbPermissions = await this.authService.permissions(user.roles);
-    console.log('dbPermissions', dbPermissions);
-    const caslPermissions: CaslPermission[] = dbPermissions.map(
-      (p) => (
-        console.log(
-          'this.parseCondition(p.conditions, user)',
-          this.parseCondition(p.conditions, user.id),
-        ),
-        {
-          action: p.action,
-          subject: p.subject,
-          conditions: this.parseCondition(p.conditions, user.id),
-        }
-      ),
-    );
+    const caslPermissions: CaslPermission[] = dbPermissions.map((p) => ({
+      action: p.action,
+      subject: p.subject,
+      conditions: this.parseCondition(p.conditions, user.id),
+    }));
     console.log('caslPermissions', caslPermissions);
     return new Ability<[PermissionAction, PermissionObjectType]>(
       caslPermissions,
@@ -60,10 +50,6 @@ export class CaslAbilityFactory {
     if (!condition) return null;
     const parsedCondition = {};
     for (const [key, rawValue] of Object.entries(condition)) {
-      console.log('11111111111111111111111111key', key);
-      console.log('11111111111111111rawValue', rawValue);
-      console.log('variables', variables);
-
       if (rawValue !== null && typeof rawValue === 'object') {
         const value = this.parseCondition(rawValue, variables);
         parsedCondition[key] = value;
@@ -76,23 +62,18 @@ export class CaslAbilityFactory {
 
       // find placeholder "${}""
       const matches = /^\${([a-zA-Z0-9]+)}$/.exec(rawValue);
-
+      console.log('matches', matches);
       if (!matches) {
         parsedCondition[key] = rawValue;
         continue;
       }
-      const innerValue = matches[1]; // Lấy giá trị bên trong {}
-      console.log('valuesssssssssssssssss', innerValue);
-
       const value = variables;
 
-      console.log('valuesssssssssssssssss', value);
       if (typeof value === 'undefined') {
         throw new ReferenceError(`Variable  is not defined`);
       }
       parsedCondition[key] = value;
     }
-    console.log('parsedCondition', parsedCondition);
     return parsedCondition;
   }
 }

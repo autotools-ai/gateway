@@ -2,7 +2,7 @@ import { CustomDecorator, SetMetadata } from '@nestjs/common';
 import {
   PermissionAction,
   PermissionObjectType,
-} from 'src/auth/ability.factory';
+} from 'src/casl/ability.factory';
 export type RequiredPermission = [PermissionAction, PermissionObjectType];
 export const PERMISSION_CHECKER_KEY = 'permission_checker_params_key';
 export const CheckPermissions = (

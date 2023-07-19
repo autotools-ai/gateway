@@ -6,7 +6,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { CaslAbilityFactory } from 'src/auth/ability.factory';
+import { CaslAbilityFactory } from 'src/casl/ability.factory';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { jwtSecretFactory } from './jwt/jwtSecretFactory';

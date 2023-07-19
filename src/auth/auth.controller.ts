@@ -10,18 +10,19 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { Public } from 'src/common/decorators';
+import { CurrentUser, Public } from 'src/common/decorators';
 
 import { CreateUserDto } from './dtos/signup.dto';
 import { LoginDto } from './dtos/login.dto';
 import { GetOtpDto, RefreshTokenDto, VerifyDto } from './dtos/verify.dto';
 import { AuthService } from './auth.service';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
-import { CaslAbilityFactory, PermissionAction } from 'src/auth/ability.factory';
+import { CaslAbilityFactory, PermissionAction } from 'src/casl/ability.factory';
 import { CheckPermissions } from 'src/common/decorators/abilities.decorator';
 import { DefaultAuthGuard } from './guards/defaultAuth.guard';
-import { ForbiddenError, defineAbility } from '@casl/ability';
 import { LoginMetadata } from 'src/common/interfaces/metadata.interface';
+import { Story } from 'src/casl/policy/story.policy';
+import { User } from 'src/casl/policy/user.policy';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -34,34 +35,17 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(DefaultAuthGuard, PermissionsGuard)
-  @CheckPermissions([PermissionAction.READ, 'User'])
-  async me(@Req() req) {
-    const ability = await this.abilityFactory.createForUser(req.user);
-    // const ability = defineAbility((can) => {
-    //   can('read', 'Story', { created_by: 1 });
-    // });
-    // const address = { country: { isoCode: 'UA', name: 'Ukraine', id: 1 } };
-    // const story = {
-    //   id: 1,
-    //   name: 'My Story',
-    //   created_by: req.user.id,
-    // };
-    const story = new Story();
-    story.created_by = req.user.id;
-    // const address = new Address('UA', 'Ukraine', 1);
-    // console.log('address', address);
-    // console.log('ability', ability);
-    console.log(ability.can(PermissionAction.READ, story)); // true
+  // @CheckPermissions([PermissionAction.READ, 'User'])
+  async me(@CurrentUser() user) {
+    const ability = await this.abilityFactory.createForUser(user);
+    const userAbility = new User();
+    userAbility.id = user.id;
+    if (!ability.can(PermissionAction.READ, userAbility)) {
+      throw new ForbiddenException('You dont have access to this resource!');
+    }
 
-    // console.log(ability.can('read', address)); // true
-
-    // if (!ability.can(PermissionAction.READ, 'User')) {
-    //   throw new ForbiddenException('You dont have access to this resource!');
-    // }
-    console.log('req.user', req.user);
     try {
-      const user = this.authService.me(req.user.id);
-      return user;
+      return this.authService.me(user.id);
     } catch (error) {
       if (error instanceof ForbiddenException) {
         throw new ForbiddenException(error.message);
@@ -110,23 +94,5 @@ export class AuthController {
   @ApiOperation({ summary: 'Get OTP', description: 'Get OTP Email ' })
   public async sendOtp(@Body() data: GetOtpDto) {
     return this.authService.sendOtp(data);
-  }
-}
-
-export class Address {
-  country;
-  constructor(isoCode, name, id) {
-    this.country = {
-      isoCode: isoCode,
-      name: name,
-      id: id,
-    };
-  }
-}
-
-export class Story {
-  created_by;
-  constructor(created_by?) {
-    this.created_by = created_by;
   }
 }

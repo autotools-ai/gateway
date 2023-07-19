@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AppAbility, CaslAbilityFactory } from '../ability.factory';
+import { AppAbility, CaslAbilityFactory } from '../../casl/ability.factory';
 import {
   PERMISSION_CHECKER_KEY,
   RequiredPermission,
