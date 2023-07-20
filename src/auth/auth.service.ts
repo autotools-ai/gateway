@@ -23,10 +23,10 @@ export class AuthService {
    * get permissions list for RBAC
    * @returns permissions list
    */
-  public async permissions(role: string) {
+  public async permissions(roleName: string) {
     try {
       const permissions = await firstValueFrom(
-        this.authClient.send('get_permission_by_role_name', { role }),
+        this.authClient.send('get_permission_by_role_name', { roleName }),
       );
       return permissions;
     } catch (error) {

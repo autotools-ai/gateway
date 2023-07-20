@@ -41,7 +41,13 @@ export class JwtStrategyBase
       if (!user) {
         throw new UnauthorizedException();
       }
-      return { ...user, roles: payload.roles as string };
+      console.log('payload.roles', user);
+      return {
+        ...user,
+        roles: payload.roles as string,
+        role_id: user.roles.id,
+        role_level: user.roles.level,
+      };
     } catch (error) {
       throw new UnauthorizedException();
     }

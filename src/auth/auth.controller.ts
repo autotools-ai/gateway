@@ -23,6 +23,7 @@ import { DefaultAuthGuard } from './guards/defaultAuth.guard';
 import { LoginMetadata } from 'src/common/interfaces/metadata.interface';
 import { Story } from 'src/casl/policy/story.policy';
 import { User } from 'src/casl/policy/user.policy';
+import { defineAbility } from '@casl/ability';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -35,22 +36,37 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(DefaultAuthGuard, PermissionsGuard)
-  // @CheckPermissions([PermissionAction.READ, 'User'])
+  // @CheckPermissions([PermissionAction.CREATE, 'User'])
   async me(@CurrentUser() user) {
-    const ability = await this.abilityFactory.createForUser(user);
-    const userAbility = new User();
-    userAbility.id = user.id;
-    if (!ability.can(PermissionAction.READ, userAbility)) {
-      throw new ForbiddenException('You dont have access to this resource!');
-    }
-
-    try {
-      return this.authService.me(user.id);
-    } catch (error) {
-      if (error instanceof ForbiddenException) {
-        throw new ForbiddenException(error.message);
-      }
-    }
+    // console.log('user', user);
+    // const ability = await this.abilityFactory.createForUser(user);
+    // console.log('ability', ability);
+    // const userAbility = new User();
+    // userAbility.id = user.id;
+    // userAbility.role_level = '5';
+    // console.log('userAbility', userAbility);
+    // console.log(
+    //   'ability.can(PermissionAction.READ, userAbility)',
+    //   ability.can(PermissionAction.CREATE, userAbility),
+    // );
+    // if (!ability.can(PermissionAction.CREATE, userAbility)) {
+    //   throw new ForbiddenException('You dont have access to this resource!');
+    // }
+    // try {
+    //   return this.authService.me(user.id);
+    // } catch (error) {
+    //   if (error instanceof ForbiddenException) {
+    //     throw new ForbiddenException(error.message);
+    //   }
+    // }
+    const ability = defineAbility((can) => {
+      can('read', 'Article', {
+        title: { $eq: 'secret' },
+        role_level: { $eq: '1' },
+      });
+    });
+    const article = new Article('secret', '1');
+    console.log(ability.can('read', article)); // true
   }
 
   @Public()
@@ -94,5 +110,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Get OTP', description: 'Get OTP Email ' })
   public async sendOtp(@Body() data: GetOtpDto) {
     return this.authService.sendOtp(data);
+  }
+}
+
+export class Article {
+  role_level;
+  title;
+  constructor(title, role_level) {
+    this.role_level = role_level;
+    this.title = title;
   }
 }
