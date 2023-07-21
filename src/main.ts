@@ -11,6 +11,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const Fingerprint = require('express-fingerprint');
 
 function configureSwagger(app): void {

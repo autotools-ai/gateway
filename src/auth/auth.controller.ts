@@ -33,40 +33,29 @@ export class AuthController {
     private abilityFactory: CaslAbilityFactory,
   ) {}
 
+  async checkUserAbility(user, action, role_level) {
+    const ability = await this.abilityFactory.createForUser(user);
+    const userAbility = new User();
+    userAbility.id = user.id;
+    userAbility.role_level = role_level.toString();
+    if (!ability.can(action, userAbility)) {
+      throw new ForbiddenException('You dont have access to this resource!');
+    }
+  }
+
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(DefaultAuthGuard, PermissionsGuard)
-  // @CheckPermissions([PermissionAction.CREATE, 'User'])
+  @CheckPermissions([PermissionAction.READ, 'User'])
   async me(@CurrentUser() user) {
-    // console.log('user', user);
-    // const ability = await this.abilityFactory.createForUser(user);
-    // console.log('ability', ability);
-    // const userAbility = new User();
-    // userAbility.id = user.id;
-    // userAbility.role_level = '5';
-    // console.log('userAbility', userAbility);
-    // console.log(
-    //   'ability.can(PermissionAction.READ, userAbility)',
-    //   ability.can(PermissionAction.CREATE, userAbility),
-    // );
-    // if (!ability.can(PermissionAction.CREATE, userAbility)) {
-    //   throw new ForbiddenException('You dont have access to this resource!');
-    // }
-    // try {
-    //   return this.authService.me(user.id);
-    // } catch (error) {
-    //   if (error instanceof ForbiddenException) {
-    //     throw new ForbiddenException(error.message);
-    //   }
-    // }
-    const ability = defineAbility((can) => {
-      can('read', 'Article', {
-        title: { $eq: 'secret' },
-        role_level: { $eq: '1' },
-      });
-    });
-    const article = new Article('secret', '1');
-    console.log(ability.can('read', article)); // true
+    // await this.checkUserAbility(user, PermissionAction.CREATE, 99999);
+    try {
+      return this.authService.me(user.id);
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw new ForbiddenException(error.message);
+      }
+    }
   }
 
   @Public()
@@ -110,14 +99,5 @@ export class AuthController {
   @ApiOperation({ summary: 'Get OTP', description: 'Get OTP Email ' })
   public async sendOtp(@Body() data: GetOtpDto) {
     return this.authService.sendOtp(data);
-  }
-}
-
-export class Article {
-  role_level;
-  title;
-  constructor(title, role_level) {
-    this.role_level = role_level;
-    this.title = title;
   }
 }

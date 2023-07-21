@@ -8,7 +8,7 @@ export enum PermissionAction {
   UPDATE = 'update',
   DELETE = 'delete',
 }
-export type PermissionObjectType = any | 'all';
+export type PermissionObjectType = any;
 export type PermissionconditionsType = any;
 
 export type AppAbility = MongoAbility<[PermissionAction, PermissionObjectType]>;
@@ -26,23 +26,17 @@ export interface PermissionCondition {
 export class CaslAbilityFactory {
   constructor(private authService: AuthService) {}
   async createForUser(user: Record<string, any>): Promise<AppAbility> {
-    console.log('usersssssssssssssssssssssss');
     const dbPermissions = await this.authService.permissions(user.roles);
-    console.log('dbPermissions', dbPermissions);
     const caslPermissions: CaslPermission[] = dbPermissions.map(
-      (p) => (
-        console.log('p', p),
-        {
-          action: p.action,
-          subject: p.subject,
-          conditions: this.parseCondition(p.conditions, {
-            id: user.id,
-            role_level: 5,
-          }),
-        }
-      ),
+      (p: { action: any; subject: any; conditions: PermissionCondition }) => ({
+        action: p.action,
+        subject: p.subject,
+        conditions: this.parseCondition(p.conditions, {
+          id: user.id,
+          role_level: user.role_level,
+        }),
+      }),
     );
-    console.log('caslPermissions', caslPermissions[0]);
     return new Ability<[PermissionAction, PermissionObjectType]>(
       caslPermissions,
     );
@@ -86,7 +80,6 @@ export class CaslAbilityFactory {
 
       parsedCondition[key] = variables[variableName];
     }
-    console.log('parsedCondition', parsedCondition);
     return parsedCondition;
   }
 }
