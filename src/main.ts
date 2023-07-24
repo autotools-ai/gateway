@@ -5,12 +5,17 @@ import {
 } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import { HttpExceptionFilter, ResponseInterceptor } from './interceptor';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
-import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
+
+import helmet from 'helmet';
+
+import * as express from 'express';
+
+import { AppModule } from './app.module';
+import { ResponseInterceptor } from './interceptor';
+import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Fingerprint = require('express-fingerprint');
 
@@ -46,6 +51,7 @@ async function bootstrap() {
       cors: true,
     },
   );
+
   app.setGlobalPrefix('/api');
   app.use(helmet());
   const configService = app.get(ConfigService);
@@ -55,15 +61,24 @@ async function bootstrap() {
     new ResponseInterceptor(reflector),
     new ClassSerializerInterceptor(reflector),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      forbidUnknownValues: false,
+  app.useGlobalPipes(new I18nValidationPipe());
+
+  app.useGlobalFilters(
+    new I18nValidationExceptionFilter({
+      detailedErrors: false,
     }),
   );
+  app.useGlobalPipes(new I18nValidationPipe());
+
+  // app.useGlobalFilters(new HttpExceptionFilter());
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //     transform: true,
+  //     forbidUnknownValues: false,
+  //   }),
+  // );
   app.use(
     Fingerprint({
       parameters: [

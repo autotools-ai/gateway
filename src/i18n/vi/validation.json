@@ -1,0 +1,23 @@
+{
+  "user_exists": "An account with the given email already exists.",
+  "password": "Password must be at least 8 characters, including numbers, letters and special characters",
+  "password_required": "Password is required",
+  "password_confirm": "Passwords do not match",
+  "email": "Email is not valid",
+  "email_required": "Email is required",
+  "email_invalid": "Định dạng email không hợp lệ",
+  "first_name": "First name is required",
+  "last_name": "Last name is required",
+  "user_not_found": "User not found",
+  "invalid_password": "Invalid password",
+  "is_string": "Must be a string",
+
+  "otp_required": "OTP is require",
+  "otp_invalid": "OTP is invalid",
+  "otp_expired": "OTP is expired",
+  "otp_not_found": "OTP not found",
+  "otp_not_match": "OTP not match",
+
+  "access_token_required": "Access token is required",
+  "refresh_token_required": "Refresh token is required"
+}

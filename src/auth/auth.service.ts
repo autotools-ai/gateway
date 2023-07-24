@@ -39,7 +39,7 @@ export class AuthService {
       const user = await firstValueFrom(this.authClient.send('login', data));
       return user;
     } catch (error) {
-      throw new HttpException(error, 400);
+      throw new HttpException(error, error.statusCode);
     }
   }
 
@@ -57,14 +57,14 @@ export class AuthService {
    * @param refresh_token
    * @returns access_token
    */
-  public async reIssueAccessToken(refresh_token: string) {
+  public async reIssueAccessToken(data: any) {
     try {
       const access_token = await firstValueFrom(
-        this.authClient.send('refresh-token', refresh_token),
+        this.authClient.send('refresh-token', data),
       );
       return access_token;
     } catch (error) {
-      throw new HttpException(error, 400);
+      throw new HttpException(error, error.statusCode);
     }
   }
 
